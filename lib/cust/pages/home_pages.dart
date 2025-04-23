@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:laundry_test/components/footer.dart';
-import 'package:laundry_test/components/navbar.dart';
-import 'package:laundry_test/widget/header_section.dart';
-import 'package:laundry_test/widget/price_list.dart';
+import 'package:laundry_test/cust/components/footer.dart';
+import 'package:laundry_test/cust/components/navbar.dart';
+
+import '../widgets/header_section.dart';
+import '../widgets/price_list.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

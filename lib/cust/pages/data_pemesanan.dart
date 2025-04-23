@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:laundry_test/cust/pages/pesan_laundry.dart';
 
 class DataPemesananPage extends StatelessWidget {
   const DataPemesananPage({super.key});
@@ -23,13 +25,7 @@ class DataPemesananPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 10,
-                        offset: Offset(0, 5),
-                      ),
-                    ],
+                    boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,30 +33,20 @@ class DataPemesananPage extends StatelessWidget {
                       Center(
                         child: const Text(
                           'Data Pemesan',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
+                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black),
                         ),
                       ),
                       const SizedBox(height: 10),
                       Center(
                         child: const Text(
                           'Silakan isi data diri Anda untuk melanjutkan pemesanan',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.black54,
-                          ),
+                          style: TextStyle(fontSize: 14, color: Colors.black54),
                         ),
                       ),
                       const SizedBox(height: 40),
 
                       // Nama Lengkap
-                      const Text(
-                        'Nama Lengkap',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
+                      const Text('Nama Lengkap', style: TextStyle(fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: namaController,
@@ -73,10 +59,7 @@ class DataPemesananPage extends StatelessWidget {
                       const SizedBox(height: 30),
 
                       // Alamat Lengkap
-                      const Text(
-                        'Alamat Lengkap',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
+                      const Text('Alamat Lengkap', style: TextStyle(fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: alamatController,
@@ -90,10 +73,7 @@ class DataPemesananPage extends StatelessWidget {
                       const SizedBox(height: 30),
 
                       // Nomor HP
-                      const Text(
-                        'Nomor HP',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
+                      const Text('Nomor HP', style: TextStyle(fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: noHpController,
@@ -110,18 +90,37 @@ class DataPemesananPage extends StatelessWidget {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            FirebaseFirestore.instance
+                                .collection('data_user')
+                                .doc()
+                                .set({
+                                  'nama': namaController.text,
+                                  'alamat': alamatController.text,
+                                  'no_hp': noHpController.text,
+                                })
+                                .then((_) {
+                                  if (context.mounted) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const PesanLaundry()),
+                                    );
+                                  }
+                                })
+                                .catchError((error) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(
+                                      context,
+                                    ).showSnackBar(SnackBar(content: Text('Ups! ada masalah nih! maaf yaaa..')));
+                                  }
+                                });
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
                             padding: const EdgeInsets.symmetric(vertical: 18),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           ),
-                          child: const Text(
-                            'Lanjutkan',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                          child: const Text('Lanjutkan', style: TextStyle(color: Colors.white)),
                         ),
                       ),
                     ],

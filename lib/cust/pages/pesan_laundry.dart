@@ -1,5 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:laundry_test/main.dart';
+import 'package:laundry_test/cust/pages/home_pages.dart';
 
 class PesanLaundry extends StatefulWidget {
   const PesanLaundry({super.key});
@@ -14,11 +15,7 @@ class _PesanLaundryState extends State<PesanLaundry> {
   final TextEditingController beratController = TextEditingController();
   final List<String> jenisPakaianDipilih = [];
 
-  final List<String> jenisPakaian = [
-    'Pakaian Biasa',
-    'Pakaian Dalam',
-    'Selimut/Bed Cover',
-  ];
+  final List<String> jenisPakaian = ['Pakaian Biasa', 'Pakaian Dalam', 'Selimut/Bed Cover'];
 
   @override
   Widget build(BuildContext context) {
@@ -37,13 +34,7 @@ class _PesanLaundryState extends State<PesanLaundry> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: Offset(0, 5),
-                    ),
-                  ],
+                  boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,43 +43,30 @@ class _PesanLaundryState extends State<PesanLaundry> {
                     const Center(
                       child: Text(
                         'Formulir Pemesanan',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
+                        style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
                       ),
                     ),
                     const SizedBox(height: 8),
                     const Center(
                       child: Text(
                         'Isi formulir berikut untuk memesan layanan laundry',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
                     ),
                     const SizedBox(height: 32),
 
                     // Jenis Layanan
-                    const Text(
-                      'Jenis Layanan',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
+                    const Text('Jenis Layanan', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       value: jenisLayanan,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Pilih layanan...',
-                      ),
-                      items: ['Cuci Kering', 'Cuci Basah', 'Setrika']
-                          .map((e) => DropdownMenuItem(
-                                value: e,
-                                child: Text(e),
-                              ))
-                          .toList(),
+                      decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Pilih layanan...'),
+                      items:
+                          [
+                            'Cuci Kering',
+                            'Cuci Basah',
+                            'Setrika',
+                          ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                       onChanged: (value) {
                         setState(() {
                           jenisLayanan = value;
@@ -98,26 +76,17 @@ class _PesanLaundryState extends State<PesanLaundry> {
                     const SizedBox(height: 20),
 
                     // Berat Pakaian
-                    const Text(
-                      'Berat Pakaian (Kg)',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
+                    const Text('Berat Pakaian (Kg)', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     TextField(
                       controller: beratController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Contoh: 5',
-                      ),
+                      decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Contoh: 5'),
                     ),
                     const SizedBox(height: 20),
 
                     // Jenis Pakaian
-                    const Text(
-                      'Jenis Pakaian',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
+                    const Text('Jenis Pakaian', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     ...jenisPakaian.map((pakaian) {
                       return CheckboxListTile(
@@ -134,10 +103,7 @@ class _PesanLaundryState extends State<PesanLaundry> {
                     const SizedBox(height: 20),
 
                     // Pengantaran
-                    const Text(
-                      'Pengambilan / Pengantaran',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
+                    const Text('Pengambilan / Pengantaran', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     RadioListTile(
                       title: const Text('Antar-Jemput'),
@@ -166,24 +132,34 @@ class _PesanLaundryState extends State<PesanLaundry> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          // Setelah klik, arahkan ke halaman home
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => HomePage()), // Gantilah dengan halaman utama yang sesuai
-                          );
+                          FirebaseFirestore.instance
+                              .collection('data_pemesanan')
+                              .doc()
+                              .set({
+                                'layanan': jenisLayanan,
+                                'berat': beratController.text,
+                                'pakaian': jenisPakaianDipilih.join(', '),
+                                'pengantaran': pengantaran,
+                              })
+                              .then((_) {
+                                if (context.mounted) {
+                                  Navigator.push(context, MaterialPageRoute(builder: (context) => const HomePage()));
+                                }
+                              })
+                              .catchError((error) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(
+                                    context,
+                                  ).showSnackBar(SnackBar(content: Text('Ups! ada masalah nih! maaf yaaa..')));
+                                }
+                              });
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blueAccent,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        child: const Text(
-                          'Pesan Sekarang',
-                          style: TextStyle(color: Colors.white),
-                        ),
+                        child: const Text('Pesan Sekarang', style: TextStyle(color: Colors.white)),
                       ),
                     ),
                   ],
