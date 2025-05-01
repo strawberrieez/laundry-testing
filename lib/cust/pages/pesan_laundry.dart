@@ -1,9 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:laundry_test/cust/pages/home_pages.dart';
+import 'package:laundry_test/cust/pages/rincian_pesanan.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:laundry_test/cust/pages/rincian_pesanan.dart';
 
 class PesanLaundry extends StatefulWidget {
-  const PesanLaundry({super.key});
+  final Map<String, dynamic> dataPemesanan;
+  const PesanLaundry({super.key, required this.dataPemesanan});
 
   @override
   State<PesanLaundry> createState() => _PesanLaundryState();
@@ -22,15 +27,13 @@ class _PesanLaundryState extends State<PesanLaundry> {
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0), // Margin di sekitar form
+          padding: const EdgeInsets.all(20.0),
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: 1000, // Lebar form lebih lebar untuk desktop
-            ),
+            constraints: const BoxConstraints(maxWidth: 1000),
             child: Padding(
-              padding: const EdgeInsets.all(32.0), // Padding di dalam form
+              padding: const EdgeInsets.all(32.0),
               child: Container(
-                padding: const EdgeInsets.all(32.0), // Padding di dalam form
+                padding: const EdgeInsets.all(32.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
@@ -39,12 +42,8 @@ class _PesanLaundryState extends State<PesanLaundry> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Judul
                     const Center(
-                      child: Text(
-                        'Formulir Pemesanan',
-                        style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
-                      ),
+                      child: Text('Formulir Pemesanan', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                     ),
                     const SizedBox(height: 8),
                     const Center(
@@ -55,12 +54,13 @@ class _PesanLaundryState extends State<PesanLaundry> {
                     ),
                     const SizedBox(height: 32),
 
-                    // Jenis Layanan
                     const Text('Jenis Layanan', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       value: jenisLayanan,
-                      decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Pilih layanan...'),
+                      decoration: _inputDecoration('Pilih layanan...'),
+                      dropdownColor: Colors.white,
+                      iconEnabledColor: const Color(0xff0278be),
                       items:
                           [
                             'Cuci Kering',
@@ -75,21 +75,20 @@ class _PesanLaundryState extends State<PesanLaundry> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Berat Pakaian
                     const Text('Berat Pakaian (Kg)', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     TextField(
                       controller: beratController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Contoh: 5'),
+                      decoration: _inputDecoration('Contoh: 5'),
                     ),
                     const SizedBox(height: 20),
 
-                    // Jenis Pakaian
                     const Text('Jenis Pakaian', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     ...jenisPakaian.map((pakaian) {
                       return CheckboxListTile(
+                        activeColor: const Color(0xff0278be),
                         title: Text(pakaian),
                         value: jenisPakaianDipilih.contains(pakaian),
                         onChanged: (selected) {
@@ -102,10 +101,10 @@ class _PesanLaundryState extends State<PesanLaundry> {
                     }),
                     const SizedBox(height: 20),
 
-                    // Pengantaran
                     const Text('Pengambilan / Pengantaran', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     RadioListTile(
+                      activeColor: const Color(0xff0278be),
                       title: const Text('Antar-Jemput'),
                       value: 'Antar-Jemput',
                       groupValue: pengantaran,
@@ -116,6 +115,7 @@ class _PesanLaundryState extends State<PesanLaundry> {
                       },
                     ),
                     RadioListTile(
+                      activeColor: const Color(0xff0278be),
                       title: const Text('Ambil Sendiri'),
                       value: 'Ambil Sendiri',
                       groupValue: pengantaran,
@@ -127,35 +127,36 @@ class _PesanLaundryState extends State<PesanLaundry> {
                     ),
                     const SizedBox(height: 30),
 
-                    // Tombol Submit
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          FirebaseFirestore.instance
-                              .collection('data_pemesanan')
-                              .doc()
-                              .set({
-                                'layanan': jenisLayanan,
-                                'berat': beratController.text,
-                                'pakaian': jenisPakaianDipilih.join(', '),
-                                'pengantaran': pengantaran,
-                              })
-                              .then((_) {
-                                if (context.mounted) {
-                                  Navigator.push(context, MaterialPageRoute(builder: (context) => const HomePage()));
-                                }
-                              })
-                              .catchError((error) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).showSnackBar(SnackBar(content: Text('Ups! ada masalah nih! maaf yaaa..')));
-                                }
-                              });
+                          if (jenisLayanan == null || beratController.text.isEmpty) {
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(const SnackBar(content: Text("Lengkapi formulir terlebih dahulu ya!")));
+                            return;
+                          }
+
+                          final dataLaundry = {
+                            'layanan': jenisLayanan,
+                            'berat': beratController.text,
+                            'pakaian': jenisPakaianDipilih.join(', '),
+                            'pengantaran': pengantaran,
+                            'status': '',
+                          };
+
+                          final combinedData = {...widget.dataPemesanan, ...dataLaundry};
+
+                          if (context.mounted) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => RincianPesanan(dataOrder: combinedData)),
+                            );
+                          }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueAccent,
+                          backgroundColor: const Color(0xff0278be),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
@@ -168,6 +169,23 @@ class _PesanLaundryState extends State<PesanLaundry> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Custom InputDecoration
+  InputDecoration _inputDecoration(String hintText) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: const TextStyle(color: Colors.grey),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xff0278be)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xff0278be), width: 2),
       ),
     );
   }

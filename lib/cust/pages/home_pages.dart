@@ -16,7 +16,6 @@ class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
 
   final GlobalKey _berandaKey = GlobalKey();
-  final GlobalKey _layananKey = GlobalKey();
   final GlobalKey _hargaKey = GlobalKey();
   final GlobalKey _kontakKey = GlobalKey();
 
@@ -25,9 +24,6 @@ class _HomePageState extends State<HomePage> {
     switch (section) {
       case 'beranda':
         contextToScroll = _berandaKey.currentContext;
-        break;
-      case 'layanan':
-        contextToScroll = _layananKey.currentContext;
         break;
       case 'harga':
         contextToScroll = _hargaKey.currentContext;
@@ -38,11 +34,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (contextToScroll != null) {
-      Scrollable.ensureVisible(
-        contextToScroll,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
+      Scrollable.ensureVisible(contextToScroll, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
     }
   }
 
@@ -61,18 +53,15 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Konten utama
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(key: _berandaKey, child: const HeaderSection()),
-                        const SizedBox(height: 40),
-                        Container(key: _hargaKey, child: const DaftarHarga()),
-                        const SizedBox(height: 40),
-                        Container(key: _kontakKey),
-                      ],
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(key: _berandaKey, child: const HeaderSection()),
+                      const SizedBox(height: 40),
+                      Container(key: _hargaKey, child: const DaftarHarga()),
+                      const SizedBox(height: 40),
+                      Container(key: _kontakKey),
+                    ],
                   ),
                   const Footer(),
                 ],
@@ -81,12 +70,7 @@ class _HomePageState extends State<HomePage> {
           ),
 
           // Navbar tetap di atas
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Navbar(onItemSelected: scrollToSection),
-          ),
+          Positioned(top: 0, left: 0, right: 0, child: Navbar(onItemSelected: scrollToSection)),
         ],
       ),
     );

@@ -5,6 +5,12 @@ import 'package:laundry_test/cust/pages/pesan_laundry.dart';
 class DataPemesananPage extends StatelessWidget {
   const DataPemesananPage({super.key});
 
+  Future<String> generateOrderId() async {
+    final snapshot = await FirebaseFirestore.instance.collection('data_pemesanan').get();
+    final count = snapshot.docs.length + 1;
+    return 'ORD_${count.toString().padLeft(4, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final TextEditingController namaController = TextEditingController();
@@ -30,93 +36,68 @@ class DataPemesananPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Center(
-                        child: const Text(
-                          'Data Pemesan',
-                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black),
+                      const Center(
+                        child: Text('Data Pemesan', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(height: 8),
+                      const Center(
+                        child: Text(
+                          'Silakan lengkapi data diri Anda untuk melanjutkan pemesanan',
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      Center(
-                        child: const Text(
-                          'Silakan isi data diri Anda untuk melanjutkan pemesanan',
-                          style: TextStyle(fontSize: 14, color: Colors.black54),
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-
-                      // Nama Lengkap
+                      const SizedBox(height: 32),
                       const Text('Nama Lengkap', style: TextStyle(fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: namaController,
-                        decoration: const InputDecoration(
-                          labelText: 'Masukkan nama lengkap Anda',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.person),
-                        ),
+                        decoration: _inputDecoration('Masukkan nama lengkap Anda', Icons.person),
                       ),
                       const SizedBox(height: 30),
-
-                      // Alamat Lengkap
                       const Text('Alamat Lengkap', style: TextStyle(fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: alamatController,
-                        decoration: const InputDecoration(
-                          labelText: 'Masukkan alamat lengkap Anda',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.location_on),
-                        ),
+                        decoration: _inputDecoration('Masukkan alamat lengkap Anda', Icons.location_on),
                         maxLines: 3,
                       ),
                       const SizedBox(height: 30),
-
-                      // Nomor HP
                       const Text('Nomor HP', style: TextStyle(fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: noHpController,
-                        decoration: const InputDecoration(
-                          labelText: 'Contoh: 08123456789',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.phone),
-                        ),
+                        decoration: _inputDecoration('Contoh: 08123456789', Icons.phone),
                         keyboardType: TextInputType.phone,
                       ),
                       const SizedBox(height: 40),
-
-                      // Lanjutkan Button
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            FirebaseFirestore.instance
-                                .collection('data_user')
-                                .doc()
-                                .set({
-                                  'nama': namaController.text,
-                                  'alamat': alamatController.text,
-                                  'no_hp': noHpController.text,
-                                })
-                                .then((_) {
-                                  if (context.mounted) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => const PesanLaundry()),
-                                    );
-                                  }
-                                })
-                                .catchError((error) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(
-                                      context,
-                                    ).showSnackBar(SnackBar(content: Text('Ups! ada masalah nih! maaf yaaa..')));
-                                  }
-                                });
+                          onPressed: () async {
+                            if (namaController.text.isEmpty ||
+                                alamatController.text.isEmpty ||
+                                noHpController.text.length < 10) {
+                              ScaffoldMessenger.of(
+                                context,
+                              ).showSnackBar(const SnackBar(content: Text("Harap isi data dengan lengkap")));
+                              return;
+                            }
+
+                            final dataPemesanan = {
+                              'nama': namaController.text,
+                              'alamat': alamatController.text,
+                              'no_hp': noHpController.text,
+                            };
+
+                            if (context.mounted) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => PesanLaundry(dataPemesanan: dataPemesanan)),
+                              );
+                            }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
+                            backgroundColor: const Color(0xff0278be),
                             padding: const EdgeInsets.symmetric(vertical: 18),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           ),
@@ -130,6 +111,25 @@ class DataPemesananPage extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String hint, IconData icon) {
+    return InputDecoration(
+      hintText: hint, // <<--- Ini ganti ke hintText, BUKAN labelText
+      prefixIcon: Icon(icon, color: Color(0xff0278be)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xff0278be)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xff0278be)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xff0278be), width: 2),
       ),
     );
   }

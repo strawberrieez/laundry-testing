@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_test/cust/pages/data_pemesanan.dart';
+import 'package:laundry_test/cust/widgets/order_status.dart';
 
 class HeaderSection extends StatelessWidget {
   const HeaderSection({super.key});
@@ -10,29 +11,34 @@ class HeaderSection extends StatelessWidget {
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 800;
 
-        return Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 20 : 40,
-            vertical: isMobile ? 40 : 60,
-          ),
-          color: Colors.white,
-          child: isMobile
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildTextContent(context, isMobile),
-                    const SizedBox(height: 30),
-                    _buildImagePlaceholder(isMobile),
-                  ],
-                )
-              : Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(flex: 1, child: _buildTextContent(context, isMobile)),
-                    const SizedBox(width: 40),
-                    Expanded(flex: 1, child: _buildImagePlaceholder(isMobile)),
-                  ],
+        return SizedBox(
+          height: isMobile ? 500 : 600,
+          width: double.infinity,
+          child: Stack(
+            children: [
+              // Background Image
+              Positioned.fill(child: Image.asset('assets/images/laundry.png', fit: BoxFit.cover)),
+
+              // Gradient overlay
+              Positioned.fill(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.white, Colors.white70, Colors.transparent],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                  ),
                 ),
+              ),
+
+              // Text and Buttons
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: isMobile ? 20 : 80, vertical: isMobile ? 40 : 80),
+                child: Align(alignment: Alignment.centerLeft, child: _buildTextContent(context, isMobile)),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -40,25 +46,17 @@ class HeaderSection extends StatelessWidget {
 
   Widget _buildTextContent(BuildContext context, bool isMobile) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Layanan Laundry\nTerpercaya',
-          style: TextStyle(
-            fontSize: isMobile ? 28 : 40,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            height: 1.2,
-          ),
+          'Layanan Laundry Profesional\nPakaian Bersih Setiap Hari',
+          style: TextStyle(fontSize: isMobile ? 28 : 42, fontWeight: FontWeight.bold, color: Colors.black, height: 1.2),
         ),
         const SizedBox(height: 20),
         const Text(
-          'Percayakan pakaian Anda kepada kami. '
-          'Layanan laundry profesional dengan sistem pelacakan status pesanan real-time.',
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey,
-          ),
+          'Percayakan pakaian Anda kepada kami.\nKami memberikan layanan laundry berkualitas tinggi\ndengan harga terjangkau dan pengiriman cepat.',
+          style: TextStyle(fontSize: 17, color: Colors.black54, height: 1.5),
         ),
         const SizedBox(height: 30),
         Wrap(
@@ -67,45 +65,33 @@ class HeaderSection extends StatelessWidget {
           children: [
             ElevatedButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const DataPemesananPage()),
-                );
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const DataPemesananPage()));
               },
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                backgroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                backgroundColor: const Color(0xff0278be),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8), // <<--- Tambah rounded dikit
+                ),
               ),
-              child: const Text('Pesan Sekarang'),
+              child: const Text('Pesan Sekarang', style: TextStyle(color: Colors.white)),
             ),
             OutlinedButton(
               onPressed: () {
-                // Bisa diisi logika untuk pelacakan pesanan
+                Navigator.push(context, MaterialPageRoute(builder: (context) => StatusPesanan()));
               },
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                side: const BorderSide(color: Colors.black),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                side: const BorderSide(color: Color(0xff0278be)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8), // <<--- Tambah rounded dikit juga
+                ),
               ),
-              child: const Text(
-                'Lacak Pesanan',
-                style: TextStyle(color: Colors.black),
-              ),
+              child: const Text('Lacak Pesanan', style: TextStyle(color: Color(0xff0278be))),
             ),
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildImagePlaceholder(bool isMobile) {
-    return Container(
-      height: isMobile ? 300 : 300,
-      width: double.infinity,
-      color: Colors.grey[100],
-      child: Image.asset(
-        'assets/images/header.png',
-        fit: BoxFit.cover,
-      ),
     );
   }
 }
