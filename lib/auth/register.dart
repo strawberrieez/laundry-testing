@@ -29,7 +29,7 @@ class RegisterPage extends StatelessWidget {
                   Flexible(
                     flex: 1,
                     child: Image.asset(
-                      'assets/images/header.png', // Pastikan ini sesuai path
+                      'assets/images/logo-laundry.png', // Pastikan ini sesuai path
                       height: 300,
                     ),
                   ),
@@ -38,14 +38,14 @@ class RegisterPage extends StatelessWidget {
                 Flexible(
                   flex: 2,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const Text(
-                        'Create an Account',
+                        'Buat Akun',
                         style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF2D2D2D)),
                       ),
-                      const SizedBox(height: 16),
-                      TextField(decoration: _inputDecoration('Full Name')),
+                      // const SizedBox(height: 16),
+                      // TextField(decoration: _inputDecoration('Full Name')),
                       const SizedBox(height: 16),
                       TextField(decoration: _inputDecoration('Email Address')),
                       const SizedBox(height: 16),
@@ -58,14 +58,17 @@ class RegisterPage extends StatelessWidget {
                           Expanded(
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF6A5AE0),
+                                backgroundColor: const Color(0xff0278be),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 padding: const EdgeInsets.symmetric(vertical: 16),
                               ),
                               onPressed: () {
                                 // Logic register
                               },
-                              child: const Text("REGISTER"),
+                              child: const Text(
+                                "REGISTER",
+                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
                             ),
                           ),
                         ],
@@ -77,7 +80,6 @@ class RegisterPage extends StatelessWidget {
                           const Text("Already have an account? "),
                           GestureDetector(
                             onTap: () {
-                              // Navigate to login
                               Navigator.pop(context);
                             },
                             child: const Text(

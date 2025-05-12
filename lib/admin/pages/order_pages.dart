@@ -10,7 +10,17 @@ class OrdersPage extends StatefulWidget {
 }
 
 class _OrdersPageState extends State<OrdersPage> {
-  String _searchQuery = '';
+  String _selectedStatus = 'diproses';
+
+  // Helper function to get the next status in the flow
+  String? _getNextStatus(String currentStatus) {
+    const statusFlow = ['diproses', 'dicuci', 'disetrika', 'selesai'];
+    final currentIndex = statusFlow.indexOf(currentStatus);
+    if (currentIndex == -1 || currentIndex == statusFlow.length - 1) {
+      return null; // No next status
+    }
+    return statusFlow[currentIndex + 1];
+  }
 
   Color _getStatusColor(String status) {
     return {
@@ -32,39 +42,95 @@ class _OrdersPageState extends State<OrdersPage> {
         Colors.grey.shade100;
   }
 
+  IconData _getStatusIcon(String status) {
+    return {
+          'diproses': Icons.access_time,
+          'dicuci': Icons.water_drop,
+          'disetrika': Icons.checkroom,
+          'selesai': Icons.check_circle,
+        }[status] ??
+        Icons.help_outline;
+  }
+
+  Future<bool?> _showConfirmationDialog(BuildContext context, String nextStatus) {
+    return showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Konfirmasi'),
+            content: Text('Apakah kamu yakin ingin mengubah status menjadi $nextStatus?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Batal')),
+              TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Ya')),
+            ],
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [_buildSearchBox(), _buildTableHeader(), _buildOrderList()],
+        children: [_buildStatusFilter(), _buildTableHeader(), _buildOrderList()],
       ),
     );
   }
 
-  Widget _buildSearchBox() {
+  Widget _buildStatusFilter() {
+    final statuses = ['diproses', 'dicuci', 'disetrika', 'selesai'];
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Container(
-        height: 40,
-        decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(20)),
-        child: TextField(
-          onChanged: (val) => setState(() => _searchQuery = val),
-          decoration: const InputDecoration(
-            hintText: 'Cari pesanan atau pelanggan...',
-            hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
-            prefixIcon: Icon(Icons.search, color: Colors.grey),
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: Text("Manajemen Pesanan", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           ),
-        ),
+          Container(
+            height: 40,
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+            child: Row(
+              children:
+                  statuses.map((status) {
+                    final isSelected = _selectedStatus == status;
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedStatus = status;
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border:
+                                isSelected
+                                    ? Border(bottom: BorderSide(color: _getStatusColor(status), width: 3))
+                                    : null,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            status[0].toUpperCase() + status.substring(1),
+                            style: TextStyle(
+                              color: isSelected ? _getStatusColor(status) : Colors.black87,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildTableHeader() {
-    final headers = ['ID PESANAN', 'PELANGGAN', 'LAYANAN', 'BERAT', 'TANGGAL MASUK', 'TOTAL', 'STATUS'];
+    final headers = ['ID PESANAN', 'PELANGGAN', 'ALAMAT', 'LAYANAN', 'BERAT', 'TANGGAL MASUK', 'TOTAL', 'STATUS'];
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.shade200))),
@@ -101,14 +167,11 @@ class _OrdersPageState extends State<OrdersPage> {
           final filteredDocs =
               snapshot.data!.docs.where((doc) {
                 final status = (doc['status'] ?? '').toString().toLowerCase();
-                final q = _searchQuery.toLowerCase();
-                final pelanggan = doc['nama']?.toString().toLowerCase() ?? '';
-                final id = doc.id.toLowerCase();
-                return status == 'diproses' && (id.contains(q) || pelanggan.contains(q));
+                return status == _selectedStatus;
               }).toList();
 
           if (filteredDocs.isEmpty) {
-            return const Center(child: Text("Belum ada pesanan yang diproses."));
+            return Center(child: Text("Belum ada pesanan yang $_selectedStatus."));
           }
 
           return ListView(
@@ -127,6 +190,7 @@ class _OrdersPageState extends State<OrdersPage> {
                       children: [
                         Expanded(child: Text(doc.id, style: const TextStyle(fontWeight: FontWeight.w500))),
                         Expanded(child: Text(doc['nama'] ?? '-', style: const TextStyle(color: Color(0xFF666666)))),
+                        Expanded(child: Text(doc['alamat'] ?? '-', style: const TextStyle(color: Color(0xFF666666)))),
                         Expanded(child: Text(doc['layanan'] ?? '-', style: const TextStyle(color: Color(0xFF666666)))),
                         Expanded(child: Text(beratDisplay, style: const TextStyle(color: Color(0xFF666666)))),
                         Expanded(child: Text(DateFormat('dd MMM yyyy').format(timestamp))),
@@ -137,21 +201,42 @@ class _OrdersPageState extends State<OrdersPage> {
                           ),
                         ),
                         Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: _getStatusBg(status),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Text(
-                              status[0].toUpperCase() + status.substring(1),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: _getStatusColor(status),
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12,
+                          child: Row(
+                            children: [
+                              OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: _getStatusColor(status),
+                                  backgroundColor: _getStatusBg(status),
+                                  side: BorderSide(color: _getStatusColor(status)),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                ),
+                                icon: Icon(_getStatusIcon(status), size: 16, color: _getStatusColor(status)),
+                                label: Text(
+                                  status[0].toUpperCase() + status.substring(1),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                                ),
+                                onPressed: () async {
+                                  final nextStatus = _getNextStatus(status);
+                                  if (nextStatus == null) return;
+                                  final confirmed = await _showConfirmationDialog(context, nextStatus);
+                                  if (confirmed != true) return;
+                                  try {
+                                    await FirebaseFirestore.instance.collection('data_pemesanan').doc(doc.id).update({
+                                      'status': nextStatus,
+                                    });
+                                    ScaffoldMessenger.of(
+                                      context,
+                                    ).showSnackBar(SnackBar(content: Text('Status updated to $nextStatus')));
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(
+                                      context,
+                                    ).showSnackBar(SnackBar(content: Text('Failed to update status: $e')));
+                                  }
+                                },
                               ),
-                            ),
+                            ],
                           ),
                         ),
                       ],

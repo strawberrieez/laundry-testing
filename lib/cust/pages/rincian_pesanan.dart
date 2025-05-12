@@ -13,6 +13,40 @@ class RincianPesanan extends StatefulWidget {
 
 class _RincianPesananState extends State<RincianPesanan> {
   String metodePembayaran = 'QRIS';
+  double? hargaLayanan;
+  bool isLoadingHarga = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHargaLayanan();
+  }
+
+  Future<void> _fetchHargaLayanan() async {
+    final snapshot =
+        await FirebaseFirestore.instance
+            .collection('laundry_service')
+            .where('name', isEqualTo: widget.dataOrder['layanan'])
+            .limit(1)
+            .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      final data = snapshot.docs.first.data();
+      final harga = data['price'];
+      final hargaParsed =
+          harga is int ? harga.toDouble() : double.tryParse(harga.toString().replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
+
+      setState(() {
+        hargaLayanan = hargaParsed;
+        isLoadingHarga = false;
+      });
+    } else {
+      setState(() {
+        hargaLayanan = 0;
+        isLoadingHarga = false;
+      });
+    }
+  }
 
   Widget _buildSectionTitle(String title) {
     return Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87));
@@ -70,278 +104,168 @@ class _RincianPesananState extends State<RincianPesanan> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoadingHarga) return const Center(child: CircularProgressIndicator());
+
     final data = widget.dataOrder;
     double beratPakaian = double.tryParse(data['berat']) ?? 0;
-    double hargaPerKg = 5000;
+    double hargaPerKg = hargaLayanan ?? 0;
     double tambahanCuciKering = data['layanan'] == 'Cuci Kering' ? 2000 : 0;
     double subtotal = beratPakaian * hargaPerKg + tambahanCuciKering;
-    double ongkir = 5000;
+    double ongkir = data['pengantaran'] == 'Antar-Jemput' ? 5000 : 0;
     double total = subtotal + ongkir;
-
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth > 800;
-    final dialogWidth = isDesktop ? 800.0 : double.infinity;
 
     return Scaffold(
       body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: dialogWidth),
-          child: Dialog(
-            backgroundColor: Colors.white.withOpacity(0.95),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        margin: const EdgeInsets.only(bottom: 20),
-                        decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
-                      ),
+        child: Dialog(
+          backgroundColor: Colors.white.withOpacity(0.95),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
                     ),
-                    Text(
-                      'Rincian Pesanan',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.black87),
-                    ),
-                    const SizedBox(height: 16),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        bool isWide = constraints.maxWidth > 800;
-                        return isWide
-                            ? Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    children: [
-                                      _buildCardSection(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            _buildSectionTitle('Informasi Pelanggan'),
-                                            const SizedBox(height: 8),
-                                            _buildDetailRow('Nama', data['nama']),
-                                            _buildDetailRow('Alamat', data['alamat']),
-                                            _buildDetailRow('Nomor HP', data['no_hp']),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      _buildCardSection(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            _buildSectionTitle('Detail Pesanan'),
-                                            const SizedBox(height: 8),
-                                            _buildDetailRow('Jenis Layanan', data['layanan']),
-                                            _buildDetailRow('Berat Pakaian', '${data['berat']} kg'),
-                                            _buildDetailRow(
-                                              'Jenis Pakaian',
-                                              data['pakaian']?.split(", ")?.join(", ") ?? "Tidak ada pakaian",
-                                            ),
-                                            _buildDetailRow('Pengantaran', data['pengantaran']),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    children: [
-                                      _buildCardSection(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            _buildSectionTitle('Rincian Pembayaran'),
-                                            const SizedBox(height: 8),
-                                            _buildDetailRow('Subtotal', 'Rp ${subtotal.toStringAsFixed(0)}'),
-                                            _buildDetailRow('Ongkir', 'Rp ${ongkir.toStringAsFixed(0)}'),
-                                            const Divider(height: 30, thickness: 1),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                const Text(
-                                                  'Total Bayar',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16,
-                                                    color: Colors.black87,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  'Rp ${total.toStringAsFixed(0)}',
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16,
-                                                    color: Colors.green,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      _buildCardSection(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            _buildSectionTitle('Pilih Metode Pembayaran'),
-                                            const SizedBox(height: 8),
-                                            _buildPaymentOption('QRIS'),
-                                            _buildPaymentOption('Tunai'),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            )
-                            : Column(
-                              children: [
-                                _buildCardSection(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      _buildSectionTitle('Informasi Pelanggan'),
-                                      const SizedBox(height: 8),
-                                      _buildDetailRow('Nama', data['nama']),
-                                      _buildDetailRow('Alamat', data['alamat']),
-                                      _buildDetailRow('Nomor HP', data['no_hp']),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                _buildCardSection(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      _buildSectionTitle('Detail Pesanan'),
-                                      const SizedBox(height: 8),
-                                      _buildDetailRow('Jenis Layanan', data['layanan']),
-                                      _buildDetailRow('Berat Pakaian', '${data['berat']} kg'),
-                                      _buildDetailRow(
-                                        'Jenis Pakaian',
-                                        data['pakaian']?.split(", ")?.join(", ") ?? "Tidak ada pakaian",
-                                      ),
-                                      _buildDetailRow('Pengantaran', data['pengantaran']),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                _buildCardSection(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      _buildSectionTitle('Rincian Pembayaran'),
-                                      const SizedBox(height: 8),
-                                      _buildDetailRow('Subtotal', 'Rp ${subtotal.toStringAsFixed(0)}'),
-                                      _buildDetailRow('Ongkir', 'Rp ${ongkir.toStringAsFixed(0)}'),
-                                      const Divider(height: 30, thickness: 1),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          const Text(
-                                            'Total Bayar',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              color: Colors.black87,
-                                            ),
-                                          ),
-                                          Text(
-                                            'Rp ${total.toStringAsFixed(0)}',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              color: Colors.green,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                _buildCardSection(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      _buildSectionTitle('Pilih Metode Pembayaran'),
-                                      const SizedBox(height: 8),
-                                      _buildPaymentOption('QRIS'),
-                                      _buildPaymentOption('Tunai'),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            );
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
+                  ),
+                  Text(
+                    'Rincian Pesanan',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Info Pelanggan
+                  _buildCardSection(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xff0278be),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        _buildSectionTitle('Informasi Pelanggan'),
+                        const SizedBox(height: 8),
+                        _buildDetailRow('Nama', data['nama']),
+                        _buildDetailRow('Alamat', data['alamat']),
+                        _buildDetailRow('Nomor HP', data['no_hp']),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Detail Pesanan
+                  _buildCardSection(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionTitle('Detail Pesanan'),
+                        const SizedBox(height: 8),
+                        _buildDetailRow('Jenis Layanan', data['layanan']),
+                        _buildDetailRow('Berat Pakaian', '${data['berat']} kg'),
+                        _buildDetailRow('Pengantaran', data['pengantaran']),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Rincian Pembayaran
+                  _buildCardSection(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionTitle('Rincian Pembayaran'),
+                        const SizedBox(height: 8),
+                        _buildDetailRow('Harga per Layanan', 'Rp ${hargaPerKg.toStringAsFixed(0)}'),
+                        _buildDetailRow('Subtotal', 'Rp ${subtotal.toStringAsFixed(0)}'),
+                        _buildDetailRow('Ongkir', 'Rp ${ongkir.toStringAsFixed(0)}'),
+                        const Divider(height: 30, thickness: 1),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Total Bayar',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
                             ),
-                            onPressed: () async {
-                              try {
-                                final docId = await _saveOrderData();
-                                if (context.mounted) {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                        title: const Text('Pembayaran Berhasil'),
-                                        content: Text('Pembayaran melalui $metodePembayaran berhasil.'),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.pushAndRemoveUntil(
-                                                context,
-                                                MaterialPageRoute(builder: (context) => const HomePage()),
-                                                (route) => false,
-                                              );
-                                            },
-                                            child: const Text('OK'),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).showSnackBar(const SnackBar(content: Text('Gagal menyimpan data pesanan')));
-                                }
-                              }
-                            },
-                            child: const Text('Lanjutkan Pembayaran'),
-                          ),
+                            Text(
+                              'Rp ${total.toStringAsFixed(0)}',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Metode Pembayaran
+                  _buildCardSection(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionTitle('Pilih Metode Pembayaran'),
+                        const SizedBox(height: 8),
+                        _buildPaymentOption('QRIS'),
+                        _buildPaymentOption('Tunai'),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff0278be),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: () async {
+                            try {
+                              final docId = await _saveOrderData();
+                              if (context.mounted) {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                      title: const Text('Pembayaran Berhasil'),
+                                      content: Text('Pembayaran melalui $metodePembayaran berhasil.'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pushAndRemoveUntil(
+                                              context,
+                                              MaterialPageRoute(builder: (context) => const HomePage()),
+                                              (route) => false,
+                                            );
+                                          },
+                                          child: const Text('OK'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(
+                                  context,
+                                ).showSnackBar(const SnackBar(content: Text('Gagal menyimpan data pesanan')));
+                              }
+                            }
+                          },
+                          child: const Text('Lanjutkan Pembayaran'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -358,6 +282,13 @@ class _RincianPesananState extends State<RincianPesanan> {
 
   Future<String> _saveOrderData() async {
     final data = widget.dataOrder;
+    double beratPakaian = double.tryParse(data['berat']) ?? 0;
+    double hargaPerKg = hargaLayanan ?? 0;
+    double tambahanCuciKering = data['layanan'] == 'Cuci Kering' ? 2000 : 0;
+    double subtotal = beratPakaian * hargaPerKg + tambahanCuciKering;
+    double ongkir = data['pengantaran'] == 'Antar-Jemput' ? 5000 : 0;
+    double total = subtotal + ongkir;
+
     final docId = await _generateCustomDocId();
     await FirebaseFirestore.instance.collection('data_pemesanan').doc(docId).set({
       'nama': data['nama'],
@@ -365,10 +296,10 @@ class _RincianPesananState extends State<RincianPesanan> {
       'no_hp': data['no_hp'],
       'layanan': data['layanan'],
       'berat': data['berat'],
-      'pakaian': data['pakaian'],
       'pengantaran': data['pengantaran'],
       'status': data['status'],
       'pembayaran': metodePembayaran,
+      'total_bayar': total,
       'timestamp': FieldValue.serverTimestamp(),
     });
     return docId;

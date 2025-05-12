@@ -51,11 +51,19 @@ class SideBar extends StatelessWidget {
           // NavItem(title: 'Pengaturan', selected: selectedMenu == 'Pengaturan', onTap: () => onMenuTap('Pengaturan')),
           const Spacer(),
           const Divider(),
-          const ListTile(
-            leading: CircleAvatar(backgroundColor: Colors.deepPurple, child: Icon(Icons.person, color: Colors.white)),
-            title: Text("Budi Santoso", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text("Admin", style: TextStyle(fontSize: 12)),
+          SizedBox(height: 10),
+          TextButton(
+            onPressed: () {
+              // Add your logout logic here
+            },
+            child: Text("Logout", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.red)),
           ),
+          SizedBox(height: 20),
+          // const ListTile(
+          // leading: CircleAvatar(backgroundColor: Colors.deepPurple, child: Icon(Icons.person, color: Colors.white)),
+          // title: Text("Logout", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          // subtitle: Text("Admin", style: TextStyle(fontSize: 12)),
+          // ),
         ],
       ),
     );

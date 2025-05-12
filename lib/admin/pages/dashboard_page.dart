@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:laundry_test/admin/pages/laporan_page.dart';
 import 'package:laundry_test/admin/pages/order_pages.dart';
 import 'package:laundry_test/admin/widgets/latest_orders.dart';
 import 'package:laundry_test/admin/widgets/service.management.dart';
@@ -31,14 +32,14 @@ class _DashboardPageState extends State<DashboardPage> {
           SummaryCards(),
           SizedBox(height: 32),
           RecentOrders(),
-          // SizedBox(height: 32),
-          // ServiceManagement(),
         ],
       );
     } else if (selectedMenu == 'Pesanan') {
       content = const OrdersPage();
     } else if (selectedMenu == 'Layanan') {
       content = const ServiceManagement();
+    } else if (selectedMenu == 'Laporan') {
+      content = const LaporanPage();
     } else {
       content = Center(child: Text('Halaman "$selectedMenu" belum tersedia'));
     }
@@ -58,7 +59,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               )
               : null,
-      appBar: isMobile ? AppBar(title: const Text("Dashboard Admin"), backgroundColor: Colors.deepPurple) : null,
+      // appBar dihapus biar nggak dobel header
       body: Row(
         children: [
           if (!isMobile)
@@ -72,10 +73,7 @@ class _DashboardPageState extends State<DashboardPage> {
             child:
                 selectedMenu == 'Pesanan'
                     ? const OrdersPage()
-                    : Align(
-                      alignment: Alignment.topLeft,
-                      child: SingleChildScrollView(padding: const EdgeInsets.all(24), child: content),
-                    ),
+                    : Padding(padding: const EdgeInsets.symmetric(horizontal: 24), child: content),
           ),
         ],
       ),

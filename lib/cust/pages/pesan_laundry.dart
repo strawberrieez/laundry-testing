@@ -1,14 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:laundry_test/cust/pages/rincian_pesanan.dart';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:laundry_test/cust/pages/rincian_pesanan.dart';
 
 class PesanLaundry extends StatefulWidget {
   final Map<String, dynamic> dataPemesanan;
-  const PesanLaundry({super.key, required this.dataPemesanan});
+  const PesanLaundry({Key? key, required this.dataPemesanan}) : super(key: key);
 
   @override
   State<PesanLaundry> createState() => _PesanLaundryState();
@@ -18,9 +14,28 @@ class _PesanLaundryState extends State<PesanLaundry> {
   String? jenisLayanan;
   String pengantaran = 'Antar-Jemput';
   final TextEditingController beratController = TextEditingController();
-  final List<String> jenisPakaianDipilih = [];
 
-  final List<String> jenisPakaian = ['Pakaian Biasa', 'Pakaian Dalam', 'Selimut/Bed Cover'];
+  List<Map<String, dynamic>> layananList = [];
+  double? hargaLayanan;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchLayanan();
+  }
+
+  Future<void> fetchLayanan() async {
+    final snapshot = await FirebaseFirestore.instance.collection('laundry_service').get();
+    final services =
+        snapshot.docs.map((doc) {
+          final data = doc.data();
+          return {'name': data['name'] ?? '', 'harga': data['harga'] != null ? (data['harga'] as num).toDouble() : 0.0};
+        }).toList();
+
+    setState(() {
+      layananList = services;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,14 +77,17 @@ class _PesanLaundryState extends State<PesanLaundry> {
                       dropdownColor: Colors.white,
                       iconEnabledColor: const Color(0xff0278be),
                       items:
-                          [
-                            'Cuci Kering',
-                            'Cuci Basah',
-                            'Setrika',
-                          ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                          layananList.map((service) {
+                            return DropdownMenuItem<String>(value: service['name'], child: Text(service['name']));
+                          }).toList(),
                       onChanged: (value) {
                         setState(() {
                           jenisLayanan = value;
+                          final selectedService = layananList.firstWhere(
+                            (service) => service['name'] == value,
+                            orElse: () => {},
+                          );
+                          hargaLayanan = selectedService['harga'] ?? 0.0;
                         });
                       },
                     ),
@@ -84,26 +102,16 @@ class _PesanLaundryState extends State<PesanLaundry> {
                     ),
                     const SizedBox(height: 20),
 
-                    const Text('Jenis Pakaian', style: TextStyle(fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 8),
-                    ...jenisPakaian.map((pakaian) {
-                      return CheckboxListTile(
-                        activeColor: const Color(0xff0278be),
-                        title: Text(pakaian),
-                        value: jenisPakaianDipilih.contains(pakaian),
-                        onChanged: (selected) {
-                          setState(() {
-                            selected! ? jenisPakaianDipilih.add(pakaian) : jenisPakaianDipilih.remove(pakaian);
-                          });
-                        },
-                        controlAffinity: ListTileControlAffinity.leading,
-                      );
-                    }),
-                    const SizedBox(height: 20),
-
+                    // Removed price display as per user request
+                    // if (hargaLayanan != null)
+                    //   Text(
+                    //     'Harga: Rp ${hargaLayanan!.toStringAsFixed(0)}',
+                    //     style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Color(0xff0278be)),
+                    //   ),
+                    // const SizedBox(height: 20),
                     const Text('Pengambilan / Pengantaran', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
-                    RadioListTile(
+                    RadioListTile<String>(
                       activeColor: const Color(0xff0278be),
                       title: const Text('Antar-Jemput'),
                       value: 'Antar-Jemput',
@@ -114,7 +122,7 @@ class _PesanLaundryState extends State<PesanLaundry> {
                         });
                       },
                     ),
-                    RadioListTile(
+                    RadioListTile<String>(
                       activeColor: const Color(0xff0278be),
                       title: const Text('Ambil Sendiri'),
                       value: 'Ambil Sendiri',
@@ -141,7 +149,7 @@ class _PesanLaundryState extends State<PesanLaundry> {
                           final dataLaundry = {
                             'layanan': jenisLayanan,
                             'berat': beratController.text,
-                            'pakaian': jenisPakaianDipilih.join(', '),
+                            'harga': hargaLayanan,
                             'pengantaran': pengantaran,
                             'status': '',
                           };
@@ -173,7 +181,6 @@ class _PesanLaundryState extends State<PesanLaundry> {
     );
   }
 
-  // Custom InputDecoration
   InputDecoration _inputDecoration(String hintText) {
     return InputDecoration(
       hintText: hintText,

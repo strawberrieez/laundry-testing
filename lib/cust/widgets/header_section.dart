@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_test/cust/pages/data_pemesanan.dart';
-import 'package:laundry_test/cust/widgets/order_status.dart';
+import 'package:laundry_test/cust/pages/list_status.dart';
 
 class HeaderSection extends StatelessWidget {
   const HeaderSection({super.key});
@@ -78,7 +78,7 @@ class HeaderSection extends StatelessWidget {
             ),
             OutlinedButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => StatusPesanan()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => ListStatus()));
               },
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),

@@ -48,16 +48,16 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Ilustrasi
-                if (!isMobile) Flexible(flex: 1, child: Image.asset('assets/images/logo-laundry.png', height: 300,),),
+                if (!isMobile) Flexible(flex: 1, child: Image.asset('assets/images/logo-laundry.png', height: 300)),
                 const SizedBox(width: 40),
                 // Form Login
                 Flexible(
                   flex: 2,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const Text(
-                        'Welcome Back',
+                        'Selamat Datang Kembali',
                         style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF2D2D2D)),
                       ),
                       const SizedBox(height: 16),
@@ -93,12 +93,15 @@ class _LoginPageState extends State<LoginPage> {
                           Expanded(
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF6A5AE0),
+                                backgroundColor: const Color(0xff0278be),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 padding: const EdgeInsets.symmetric(vertical: 16),
                               ),
                               onPressed: _login,
-                              child: const Text("LOGIN"),
+                              child: const Text(
+                                "LOGIN",
+                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
                             ),
                           ),
                         ],
@@ -109,11 +112,8 @@ class _LoginPageState extends State<LoginPage> {
                         children: [
                           const Text("Don't have an account? "),
                           GestureDetector(
-                            // onTap: () {
-                            //   Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterPage()));
-                            // },
                             onTap: () {
-                              Navigator.pushNamed(context, '/register');
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterPage()));
                             },
                             child: const Text(
                               "Register",

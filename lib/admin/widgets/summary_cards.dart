@@ -38,15 +38,16 @@ class SummaryCards extends StatelessWidget {
 
           pelangganUnik.add('$nama|$nohp');
 
-          if (selisihJam <= 24) {
+          if (ts.year == now.year && ts.month == now.month && ts.day == now.day) {
             pesananHariIni++;
-
-            // if ((doc['status'] ?? 'Menunggu') == 'Menunggu') {
-            //   dalamProses++;
-            // }
 
             final berat = double.tryParse(doc['berat']?.toString() ?? '0') ?? 0;
             pendapatanHariIni += berat * 10000;
+          }
+
+          final status = (doc['status'] ?? '').toString().toLowerCase();
+          if (status == 'diproses' || status == 'dicuci' || status == 'disetrika') {
+            dalamProses++;
           }
         }
 
@@ -81,14 +82,6 @@ class SummaryCards extends StatelessWidget {
               subtitle: "dari kemarin",
               icon: Icons.attach_money,
               color: Colors.green,
-            ),
-            SummaryCard(
-              title: "Total Pelanggan",
-              value: pelangganUnik.length.toString(),
-              percentage: "+5%", // placeholder
-              subtitle: "bulan ini",
-              icon: Icons.person,
-              color: Colors.purple,
             ),
           ],
         );
