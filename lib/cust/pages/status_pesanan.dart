@@ -29,9 +29,14 @@ class DetailPesananPage extends StatelessWidget {
     String pengantaran = dataOrder['pengantaran'] ?? '-';
     String status = dataOrder['status'] ?? '-';
     String metodePembayaran = dataOrder['pembayaran'] ?? '-';
-    Map<String, dynamic> timestamps = dataOrder['timestamp'] ?? {};
+    dynamic timestamp = dataOrder['timestamp'];
 
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: Center(
         child: FutureBuilder<double>(
           future: fetchHargaLayanan(jenisLayanan),
@@ -56,7 +61,6 @@ class DetailPesananPage extends StatelessWidget {
                         constraints: const BoxConstraints(maxWidth: 1200),
                         child: Row(
                           children: [
-                            // Kolom Kiri
                             Expanded(
                               flex: 2,
                               child: Column(
@@ -74,8 +78,6 @@ class DetailPesananPage extends StatelessWidget {
                                     _detailRow('Pengantaran', pengantaran),
                                   ]),
                                   const SizedBox(height: 16),
-
-                                  // ✅ Rincian Pembayaran dinamis
                                   _sectionCard('Rincian Pembayaran', [
                                     _detailRow('Metode Pembayaran', metodePembayaran),
                                     _detailRow(
@@ -90,15 +92,10 @@ class DetailPesananPage extends StatelessWidget {
                                 ],
                               ),
                             ),
-
-                            // Kolom Kanan
                             const SizedBox(width: 16),
                             Expanded(
                               flex: 1,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [_statusSection(status, timestamps)],
-                              ),
+                              child: Column(children: [_statusSection(status, timestamp, jenisLayanan)]),
                             ),
                           ],
                         ),
@@ -144,9 +141,8 @@ class DetailPesananPage extends StatelessWidget {
     );
   }
 
-  Widget _statusSection(String currentStatus, Map<String, dynamic> timestamps) {
+  Widget _statusSection(String currentStatus, dynamic timestamp, String jenisLayanan) {
     final List<String> stepTitles = ['Pesanan Diterima', 'Sedang Dicuci', 'Sedang Disetrika', 'Pesanan Selesai'];
-    final List<String> statusKeys = ['diproses', 'dicuci', 'disetrika', 'selesai'];
 
     int getActiveStepIndex(String? status) {
       switch (status?.toLowerCase()) {
@@ -165,35 +161,36 @@ class DetailPesananPage extends StatelessWidget {
 
     int activeStepIndex = getActiveStepIndex(currentStatus);
 
-    String formatTime(dynamic timestamp) {
-      if (timestamp == null) return '--:--';
+    DateTime? getOrderDate() {
       try {
-        DateTime dt;
-        if (timestamp is DateTime) {
-          dt = timestamp;
-        } else if (timestamp is int) {
-          dt = DateTime.fromMillisecondsSinceEpoch(timestamp);
-        } else if (timestamp is String) {
-          dt = DateTime.parse(timestamp);
-        } else {
-          return '--:--';
-        }
-        return DateFormat('HH:mm').format(dt);
-      } catch (_) {
-        return '--:--';
-      }
+        if (timestamp is Timestamp) return timestamp.toDate();
+        if (timestamp is DateTime) return timestamp;
+        if (timestamp is int) return DateTime.fromMillisecondsSinceEpoch(timestamp);
+        if (timestamp is String) return DateTime.parse(timestamp);
+      } catch (_) {}
+      return null;
+    }
+
+    String getEstimatedCompletion() {
+      DateTime? orderDate = getOrderDate();
+      if (orderDate == null) return '-';
+
+      final isExpress = jenisLayanan.toLowerCase() == 'express';
+      final estimatedDate = isExpress ? orderDate : orderDate.add(const Duration(days: 3));
+
+      return DateFormat('dd MMMM yyyy, HH:mm', 'id_ID').format(estimatedDate);
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Text('Status Pesanan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const Center(child: Text('Status Pesanan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
         const SizedBox(height: 4),
-        const Text('Lacak status pesanan Anda secara real-time', style: TextStyle(color: Colors.grey)),
+        const Center(child: Text('Lacak status pesanan Anda secara real-time', style: TextStyle(color: Colors.grey))),
         const SizedBox(height: 20),
         Column(
           children: List.generate(stepTitles.length, (index) {
             final isActive = index <= activeStepIndex;
-            final timeText = formatTime(timestamps[statusKeys[index]]);
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 15.0),
               child: Row(
@@ -232,16 +229,13 @@ class DetailPesananPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text(timeText, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  const Text('-', style: TextStyle(color: Colors.grey, fontSize: 12)),
                 ],
               ),
             );
           }),
         ),
         const SizedBox(height: 20),
-        const Text('Estimasi Selesai', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 6),
-        Text('01 Mei 2025, 16:00', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
       ],
     );
   }

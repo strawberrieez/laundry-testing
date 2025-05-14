@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:laundry_test/admin/pages/dashboard_page.dart';
 import 'package:laundry_test/auth/login.dart';
 import 'package:laundry_test/cust/pages/home_pages.dart';
 import 'package:laundry_test/firebase_options.dart';

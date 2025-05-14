@@ -12,12 +12,11 @@ class OrdersPage extends StatefulWidget {
 class _OrdersPageState extends State<OrdersPage> {
   String _selectedStatus = 'diproses';
 
-  // Helper function to get the next status in the flow
   String? _getNextStatus(String currentStatus) {
     const statusFlow = ['diproses', 'dicuci', 'disetrika', 'selesai'];
     final currentIndex = statusFlow.indexOf(currentStatus);
     if (currentIndex == -1 || currentIndex == statusFlow.length - 1) {
-      return null; // No next status
+      return null;
     }
     return statusFlow[currentIndex + 1];
   }
@@ -85,8 +84,8 @@ class _OrdersPageState extends State<OrdersPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12.0),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 12.0),
             child: Text("Manajemen Pesanan", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           ),
           Container(
@@ -177,7 +176,7 @@ class _OrdersPageState extends State<OrdersPage> {
           return ListView(
             children:
                 filteredDocs.map((doc) {
-                  final timestamp = doc['timestamp']?.toDate() ?? DateTime.now();
+                  final timestamp = doc['timestamp']?['diproses']?.toDate() ?? DateTime.now();
                   final berat = doc['berat'] ?? '-';
                   final status = (doc['status'] ?? '-').toString().toLowerCase();
                   final beratDisplay = berat.toString().endsWith('kg') ? berat : '$berat kg';
@@ -222,10 +221,13 @@ class _OrdersPageState extends State<OrdersPage> {
                                   if (nextStatus == null) return;
                                   final confirmed = await _showConfirmationDialog(context, nextStatus);
                                   if (confirmed != true) return;
+
                                   try {
                                     await FirebaseFirestore.instance.collection('data_pemesanan').doc(doc.id).update({
                                       'status': nextStatus,
+                                      'timestamp.$nextStatus': FieldValue.serverTimestamp(),
                                     });
+
                                     ScaffoldMessenger.of(
                                       context,
                                     ).showSnackBar(SnackBar(content: Text('Status updated to $nextStatus')));

@@ -8,13 +8,19 @@ class ListStatus extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(title: const Text('Status Pesanan'), backgroundColor: const Color(0xff0278be)),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: StreamBuilder<QuerySnapshot>(
-        stream:
-            FirebaseFirestore.instance
-                .collection('data_pemesanan')
-                .orderBy('timestamp', descending: true) // Mengurutkan berdasarkan waktu
-                .snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection('data_pemesanan')
+            .orderBy('timestamp', descending: true)
+            .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -25,13 +31,11 @@ class ListStatus extends StatelessWidget {
             itemCount: data.length,
             itemBuilder: (context, index) {
               var pesanan = data[index];
-              var tanggalPemesanan =
-                  pesanan['timestamp'] != null
-                      ? (pesanan['timestamp'] as Timestamp).toDate()
-                      : DateTime.now(); // Mengambil timestamp dan mengonversinya ke DateTime
+              var tanggalPemesanan = pesanan['timestamp'] != null
+                  ? (pesanan['timestamp'] as Timestamp).toDate()
+                  : DateTime.now();
               var formattedDate = "${tanggalPemesanan.day}-${tanggalPemesanan.month}-${tanggalPemesanan.year}";
 
-              // Mengambil data pesanan untuk dikirim ke DetailPesananPage
               var pesananData = {
                 'nama': pesanan['nama'] ?? '-',
                 'alamat': pesanan['alamat'] ?? '-',
@@ -53,7 +57,6 @@ class ListStatus extends StatelessWidget {
                   subtitle: const Text('Klik untuk melihat status pemesanan'),
                   leading: const Icon(Icons.local_laundry_service, color: Color(0xff0278be)),
                   onTap: () {
-                    // Mengirimkan data pesanan ke DetailPesananPage
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => DetailPesananPage(dataOrder: pesananData)),
