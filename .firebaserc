@@ -1,5 +1,16 @@
 {
-  "projects": {
-    "default": "laundry-project-6c9d6"
-  }
+  "projects": {},
+  "targets": {
+    "laundry-project-6c9d6": {
+      "hosting": {
+        "kialaundry": [
+          "kialaundry"
+        ],
+        "kialaundry-admin": [
+          "kialaundry-admin"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

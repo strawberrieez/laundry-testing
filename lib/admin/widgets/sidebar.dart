@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:laundry_test/auth/login.dart';
 import 'nav_item.dart';
 
 class SideBar extends StatelessWidget {
@@ -18,7 +20,6 @@ class SideBar extends StatelessWidget {
           const SizedBox(height: 40),
           Image.asset('assets/images/logo-laundry.png', width: 80, height: 80),
           const SizedBox(height: 20),
-          // const Text("Laundry App", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -45,25 +46,19 @@ class SideBar extends StatelessWidget {
           const SizedBox(height: 40),
           NavItem(title: 'Dashboard', selected: selectedMenu == 'Dashboard', onTap: () => onMenuTap('Dashboard')),
           NavItem(title: 'Pesanan', selected: selectedMenu == 'Pesanan', onTap: () => onMenuTap('Pesanan')),
-          // NavItem(title: 'Pelanggan', selected: selectedMenu == 'Pelanggan', onTap: () => onMenuTap('Pelanggan')),
           NavItem(title: 'Layanan', selected: selectedMenu == 'Layanan', onTap: () => onMenuTap('Layanan')),
           NavItem(title: 'Laporan', selected: selectedMenu == 'Laporan', onTap: () => onMenuTap('Laporan')),
-          // NavItem(title: 'Pengaturan', selected: selectedMenu == 'Pengaturan', onTap: () => onMenuTap('Pengaturan')),
           const Spacer(),
           const Divider(),
           SizedBox(height: 10),
           TextButton(
-            onPressed: () {
-              // Add your logout logic here
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage()));
             },
             child: Text("Logout", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.red)),
           ),
           SizedBox(height: 20),
-          // const ListTile(
-          // leading: CircleAvatar(backgroundColor: Colors.deepPurple, child: Icon(Icons.person, color: Colors.white)),
-          // title: Text("Logout", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-          // subtitle: Text("Admin", style: TextStyle(fontSize: 12)),
-          // ),
         ],
       ),
     );

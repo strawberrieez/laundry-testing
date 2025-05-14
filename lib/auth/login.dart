@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:laundry_test/admin/pages/dashboard_page.dart';
 import 'package:laundry_test/auth/register.dart';
+import 'package:laundry_test/cust/pages/home_pages.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,17 +15,61 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _login() {
-    String email = _emailController.text.trim();
-    String password = _passwordController.text;
+  bool _isLoading = false;
 
-    if (email == 'admin' && password == 'admin') {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const DashboardPage()));
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('USERNAME/PASSWORD SALAH'), backgroundColor: Colors.red));
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      _showSnackBar('Please enter email and password');
+      return;
     }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
+
+      if (!mounted) return;
+
+      final userEmail = credential.user?.email;
+
+      if (userEmail == 'admin@admin.com') {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const DashboardPage()));
+      } else {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage()));
+      }
+    } on FirebaseAuthException catch (e) {
+      String message = e.message ?? 'Login failed';
+      if (e.code == 'user-not-found') {
+        message = 'No user found for that email.';
+      } else if (e.code == 'wrong-password') {
+        message = 'Wrong password provided.';
+      }
+      _showSnackBar(message);
+    } catch (e) {
+      _showSnackBar('An error occurred. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -47,10 +93,8 @@ class _LoginPageState extends State<LoginPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Ilustrasi
                 if (!isMobile) Flexible(flex: 1, child: Image.asset('assets/images/logo-laundry.png', height: 300)),
                 const SizedBox(width: 40),
-                // Form Login
                 Flexible(
                   flex: 2,
                   child: Column(
@@ -97,11 +141,18 @@ class _LoginPageState extends State<LoginPage> {
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 padding: const EdgeInsets.symmetric(vertical: 16),
                               ),
-                              onPressed: _login,
-                              child: const Text(
-                                "LOGIN",
-                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                              ),
+                              onPressed: _isLoading ? null : _login,
+                              child:
+                                  _isLoading
+                                      ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                      )
+                                      : const Text(
+                                        "LOGIN",
+                                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                                      ),
                             ),
                           ),
                         ],

@@ -1,9 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:laundry_test/auth/login.dart';
 import 'package:laundry_test/cust/pages/data_pemesanan.dart';
 import 'package:laundry_test/cust/pages/list_status.dart';
 
 class HeaderSection extends StatelessWidget {
   const HeaderSection({super.key});
+
+  void _handleProtectedNavigation(BuildContext context, Widget targetPage) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      // Tampilkan dialog kalau belum login
+      showDialog(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              title: const Text("Anda belum login"),
+              content: const Text("Silakan login terlebih dahulu untuk menggunakan fitur ini."),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal")),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()));
+                  },
+                  child: const Text("Login"),
+                ),
+              ],
+            ),
+      );
+    } else {
+      // Kalau sudah login, lanjut ke halaman target
+      Navigator.push(context, MaterialPageRoute(builder: (_) => targetPage));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,27 +96,23 @@ class HeaderSection extends StatelessWidget {
           children: [
             ElevatedButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const DataPemesananPage()));
+                _handleProtectedNavigation(context, const DataPemesananPage());
               },
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                 backgroundColor: const Color(0xff0278be),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8), // <<--- Tambah rounded dikit
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               child: const Text('Pesan Sekarang', style: TextStyle(color: Colors.white)),
             ),
             OutlinedButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => ListStatus()));
+                _handleProtectedNavigation(context, ListStatus());
               },
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                 side: const BorderSide(color: Color(0xff0278be)),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8), // <<--- Tambah rounded dikit juga
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               child: const Text('Lacak Pesanan', style: TextStyle(color: Color(0xff0278be))),
             ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:laundry_test/cust/pages/home_pages.dart';
 
 class Navbar extends StatefulWidget {
   final Function(String section) onItemSelected;
@@ -11,12 +13,12 @@ class Navbar extends StatefulWidget {
 }
 
 class _NavbarState extends State<Navbar> {
-  String _activeSection = 'beranda'; // Default aktif pertama
+  String _activeSection = 'beranda';
 
   void _handleItemTap(String section) {
     widget.onItemSelected(section);
     setState(() {
-      _activeSection = section; // Set aktif section
+      _activeSection = section;
     });
   }
 
@@ -24,19 +26,11 @@ class _NavbarState extends State<Navbar> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // Mobile Layout
     if (screenWidth < 800) {
       return AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         title: Image.asset('assets/images/logo-laundry.png', height: 40),
-        // title: const Text(
-        //   'LOGO',
-        //   style: TextStyle(
-        //     fontWeight: FontWeight.bold,
-        //     color: Colors.indigo,
-        //   ),
-        // ),
         actions: [
           Builder(
             builder:
@@ -49,7 +43,8 @@ class _NavbarState extends State<Navbar> {
       );
     }
 
-    // Desktop Layout
+    final currentUser = FirebaseAuth.instance.currentUser;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
       color: Colors.white,
@@ -59,7 +54,7 @@ class _NavbarState extends State<Navbar> {
           Row(
             children: [
               Image.asset('assets/images/logo-laundry.png', height: 40),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Row(
                 children: [
                   Text(
@@ -84,49 +79,15 @@ class _NavbarState extends State<Navbar> {
               ),
             ],
           ),
-          // const Text(
-          //   'LOGO',
-          //   style: TextStyle(
-          //     fontWeight: FontWeight.bold,
-          //     fontSize: 20,
-          //     color: Colors.indigo,
-          //     letterSpacing: 1.5,
-          //   ),
-          // ),
-
-          // Menu Items
           Row(
             children: [
               _buildMenuItem('Beranda', 'beranda'),
-              _buildMenuItem('Layanan', 'harga'), // Layanan klik ke harga
+              _buildMenuItem('Layanan', 'harga'),
               _buildMenuItem('Kontak', 'kontak'),
+              const SizedBox(width: 24),
+              if (currentUser != null) _buildUserDropdown(currentUser),
             ],
           ),
-
-          // Masuk & Daftar
-          // Row(
-          //   children: [
-          //     ElevatedButton(
-          //       onPressed: () {},
-          //       style: ElevatedButton.styleFrom(
-          //         backgroundColor: Colors.black,
-          //         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          //       ),
-          //       child: const Text('Masuk', style: TextStyle(color: Colors.white)),
-          //     ),
-          //     const SizedBox(width: 10),
-          //     OutlinedButton(
-          //       onPressed: () {},
-          //       style: OutlinedButton.styleFrom(
-          //         side: const BorderSide(color: Colors.black),
-          //         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          //       ),
-          //       child: const Text('Daftar', style: TextStyle(color: Colors.black)),
-          //     ),
-          //   ],
-          // ),
         ],
       ),
     );
@@ -144,8 +105,44 @@ class _NavbarState extends State<Navbar> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: MouseRegion(
           cursor: SystemMouseCursors.click,
-          child: Text(label, style: TextStyle(color: isActive ? Color(0xff0278be) : Colors.black, fontSize: 16)),
+          child: Text(label, style: TextStyle(color: isActive ? const Color(0xff0278be) : Colors.black, fontSize: 16)),
         ),
+      ),
+    );
+  }
+
+  Widget _buildUserDropdown(User user) {
+    final email = user.email ?? 'User';
+    final initial = email.isNotEmpty ? email[0].toUpperCase() : '?';
+
+    return PopupMenuButton<String>(
+      offset: const Offset(0, 50),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      onSelected: (value) async {
+        if (value == 'logout') {
+          await FirebaseAuth.instance.signOut();
+          if (mounted) {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
+          }
+        }
+      },
+      itemBuilder:
+          (context) => [
+            PopupMenuItem(
+              value: 'email',
+              enabled: false,
+              child: Text(email, style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.black)),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem(
+              value: 'logout',
+              child: Row(children: [Text('Logout', style: TextStyle(color: Colors.red))]),
+            ),
+          ],
+      child: CircleAvatar(
+        radius: 18,
+        backgroundColor: const Color(0xff0278be),
+        child: Text(initial, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -179,14 +176,6 @@ class NavigationDrawerMobile extends StatelessWidget {
                 onItemSelected('harga');
               },
             ),
-            // ListTile(
-            //   leading: const Icon(Icons.price_change),
-            //   title: const Text('Harga'),
-            //   onTap: () {
-            //     Navigator.pop(context);
-            //     onItemSelected('harga');
-            //   },
-            // ),
             ListTile(
               leading: const Icon(Icons.phone),
               title: const Text('Kontak'),
@@ -195,9 +184,6 @@ class NavigationDrawerMobile extends StatelessWidget {
                 onItemSelected('kontak');
               },
             ),
-            // const Divider(),
-            // ListTile(leading: const Icon(Icons.login), title: const Text('Masuk'), onTap: () {}),
-            // ListTile(leading: const Icon(Icons.app_registration), title: const Text('Daftar'), onTap: () {}),
           ],
         ),
       ),
