@@ -15,9 +15,7 @@ class _OrdersPageState extends State<OrdersPage> {
   String? _getNextStatus(String currentStatus) {
     const statusFlow = ['diproses', 'dicuci', 'disetrika', 'selesai'];
     final currentIndex = statusFlow.indexOf(currentStatus);
-    if (currentIndex == -1 || currentIndex == statusFlow.length - 1) {
-      return null;
-    }
+    if (currentIndex == -1 || currentIndex == statusFlow.length - 1) return null;
     return statusFlow[currentIndex + 1];
   }
 
@@ -56,8 +54,8 @@ class _OrdersPageState extends State<OrdersPage> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: Text('Konfirmasi'),
-            content: Text('Apakah kamu yakin ingin mengubah status menjadi $nextStatus?'),
+            title: const Text('Konfirmasi'),
+            content: Text('Apakah kamu yakin ingin mengubah status menjadi "$nextStatus"?'),
             actions: [
               TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Batal')),
               TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Ya')),
@@ -97,11 +95,7 @@ class _OrdersPageState extends State<OrdersPage> {
                     final isSelected = _selectedStatus == status;
                     return Expanded(
                       child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedStatus = status;
-                          });
-                        },
+                        onTap: () => setState(() => _selectedStatus = status),
                         child: Container(
                           decoration: BoxDecoration(
                             border:
@@ -155,13 +149,9 @@ class _OrdersPageState extends State<OrdersPage> {
         stream:
             FirebaseFirestore.instance.collection('data_pemesanan').orderBy('timestamp', descending: true).snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting)
             return const Center(child: CircularProgressIndicator());
-          }
-
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("Belum ada pesanan."));
-          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return const Center(child: Text("Belum ada pesanan."));
 
           final filteredDocs =
               snapshot.data!.docs.where((doc) {
@@ -169,14 +159,13 @@ class _OrdersPageState extends State<OrdersPage> {
                 return status == _selectedStatus;
               }).toList();
 
-          if (filteredDocs.isEmpty) {
-            return Center(child: Text("Belum ada pesanan yang $_selectedStatus."));
-          }
+          if (filteredDocs.isEmpty) return Center(child: Text("Belum ada pesanan yang $_selectedStatus."));
 
           return ListView(
             children:
                 filteredDocs.map((doc) {
-                  final timestamp = doc['timestamp']?['diproses']?.toDate() ?? DateTime.now();
+                  final timestampField = doc['timestamp'];
+                  DateTime timestamp = (timestampField is Timestamp) ? timestampField.toDate() : DateTime.now();
                   final berat = doc['berat'] ?? '-';
                   final status = (doc['status'] ?? '-').toString().toLowerCase();
                   final beratDisplay = berat.toString().endsWith('kg') ? berat : '$berat kg';
@@ -219,6 +208,7 @@ class _OrdersPageState extends State<OrdersPage> {
                                 onPressed: () async {
                                   final nextStatus = _getNextStatus(status);
                                   if (nextStatus == null) return;
+
                                   final confirmed = await _showConfirmationDialog(context, nextStatus);
                                   if (confirmed != true) return;
 
@@ -230,11 +220,11 @@ class _OrdersPageState extends State<OrdersPage> {
 
                                     ScaffoldMessenger.of(
                                       context,
-                                    ).showSnackBar(SnackBar(content: Text('Status updated to $nextStatus')));
+                                    ).showSnackBar(SnackBar(content: Text('Status diubah menjadi "$nextStatus"')));
                                   } catch (e) {
                                     ScaffoldMessenger.of(
                                       context,
-                                    ).showSnackBar(SnackBar(content: Text('Failed to update status: $e')));
+                                    ).showSnackBar(SnackBar(content: Text('Gagal update status: $e')));
                                   }
                                 },
                               ),

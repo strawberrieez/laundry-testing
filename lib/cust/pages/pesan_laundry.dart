@@ -40,6 +40,12 @@ class _PesanLaundryState extends State<PesanLaundry> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
@@ -68,7 +74,6 @@ class _PesanLaundryState extends State<PesanLaundry> {
                       ),
                     ),
                     const SizedBox(height: 32),
-
                     const Text('Jenis Layanan', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
@@ -92,7 +97,6 @@ class _PesanLaundryState extends State<PesanLaundry> {
                       },
                     ),
                     const SizedBox(height: 20),
-
                     const Text('Berat Pakaian (Kg)', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     TextField(
@@ -101,14 +105,6 @@ class _PesanLaundryState extends State<PesanLaundry> {
                       decoration: _inputDecoration('Contoh: 5'),
                     ),
                     const SizedBox(height: 20),
-
-                    // Removed price display as per user request
-                    // if (hargaLayanan != null)
-                    //   Text(
-                    //     'Harga: Rp ${hargaLayanan!.toStringAsFixed(0)}',
-                    //     style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Color(0xff0278be)),
-                    //   ),
-                    // const SizedBox(height: 20),
                     const Text('Pengambilan / Pengantaran', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     RadioListTile<String>(
@@ -134,7 +130,6 @@ class _PesanLaundryState extends State<PesanLaundry> {
                       },
                     ),
                     const SizedBox(height: 30),
-
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(

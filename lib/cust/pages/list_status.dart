@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:laundry_test/cust/pages/status_pesanan.dart'; // Import DetailPesananPage
 
@@ -9,18 +10,14 @@ class ListStatus extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('data_pemesanan')
-            .orderBy('timestamp', descending: true)
-            .snapshots(),
+        stream: coba(),
+        // stream:
+        //     FirebaseFirestore.instance.collection('data_pemesanan').orderBy('timestamp', descending: true).snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -31,9 +28,8 @@ class ListStatus extends StatelessWidget {
             itemCount: data.length,
             itemBuilder: (context, index) {
               var pesanan = data[index];
-              var tanggalPemesanan = pesanan['timestamp'] != null
-                  ? (pesanan['timestamp'] as Timestamp).toDate()
-                  : DateTime.now();
+              var tanggalPemesanan =
+                  pesanan['timestamp'] != null ? (pesanan['timestamp'] as Timestamp).toDate() : DateTime.now();
               var formattedDate = "${tanggalPemesanan.day}-${tanggalPemesanan.month}-${tanggalPemesanan.year}";
 
               var pesananData = {
@@ -55,6 +51,7 @@ class ListStatus extends StatelessWidget {
                   contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                   title: Text('Pesanan pada $formattedDate', style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: const Text('Klik untuk melihat status pemesanan'),
+                  // subtitle: Text(pesanan['nama'].toString()),
                   leading: const Icon(Icons.local_laundry_service, color: Color(0xff0278be)),
                   onTap: () {
                     Navigator.push(
@@ -70,4 +67,13 @@ class ListStatus extends StatelessWidget {
       ),
     );
   }
+}
+
+Stream<QuerySnapshot<Map<String, dynamic>>> coba() {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  return FirebaseFirestore.instance
+      .collection('data_pemesanan')
+      .where('uid', isEqualTo: uid)
+      .orderBy('timestamp', descending: true)
+      .snapshots();
 }

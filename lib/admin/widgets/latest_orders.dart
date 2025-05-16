@@ -10,7 +10,7 @@ class RecentOrders extends StatelessWidget {
   }
 
   void _tolakPesanan(BuildContext context, String docId) async {
-    await FirebaseFirestore.instance.collection('data_pemesanan').doc(docId).delete();
+    await FirebaseFirestore.instance.collection('data_pemesanan').doc(docId).update({'status': 'dicancel'});
   }
 
   @override

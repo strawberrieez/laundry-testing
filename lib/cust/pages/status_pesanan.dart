@@ -142,9 +142,16 @@ class DetailPesananPage extends StatelessWidget {
   }
 
   Widget _statusSection(String currentStatus, dynamic timestamp, String jenisLayanan) {
-    final List<String> stepTitles = ['Pesanan Diterima', 'Sedang Dicuci', 'Sedang Disetrika', 'Pesanan Selesai'];
+    final bool isCancelled = currentStatus.toLowerCase() == 'dicancel';
+    final List<String> stepTitles =
+        isCancelled
+            ? ['Pesanan Ditolak oleh Admin', 'Sedang Dicuci', 'Sedang Disetrika', 'Pesanan Selesai']
+            : ['Pesanan Diterima', 'Sedang Dicuci', 'Sedang Disetrika', 'Pesanan Selesai'];
 
     int getActiveStepIndex(String? status) {
+      if (isCancelled) {
+        return 0;
+      }
       switch (status?.toLowerCase()) {
         case 'diproses':
           return 0;
@@ -191,6 +198,7 @@ class DetailPesananPage extends StatelessWidget {
         Column(
           children: List.generate(stepTitles.length, (index) {
             final isActive = index <= activeStepIndex;
+            final isCancelledStep = isCancelled && index == 0;
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 15.0),
               child: Row(
@@ -207,7 +215,8 @@ class DetailPesananPage extends StatelessWidget {
                             ),
                           CircleAvatar(
                             radius: 15,
-                            backgroundColor: isActive ? const Color(0xff0278be) : Colors.grey,
+                            backgroundColor:
+                                isActive ? (isCancelledStep ? Colors.red : const Color(0xff0278be)) : Colors.grey,
                             child: Icon(
                               isActive ? Icons.check_circle : Icons.circle,
                               color: isActive ? Colors.white : Colors.grey[400],
@@ -223,7 +232,7 @@ class DetailPesananPage extends StatelessWidget {
                     child: Text(
                       stepTitles[index],
                       style: TextStyle(
-                        color: isActive ? Colors.black : Colors.grey,
+                        color: isCancelledStep ? Colors.red : (isActive ? Colors.black : Colors.grey),
                         fontWeight: FontWeight.w500,
                         fontSize: 14,
                       ),

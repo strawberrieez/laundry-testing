@@ -18,6 +18,12 @@ class DataPemesananPage extends StatelessWidget {
     final TextEditingController noHpController = TextEditingController();
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
       body: Center(
         child: SingleChildScrollView(
           child: Container(
@@ -117,7 +123,7 @@ class DataPemesananPage extends StatelessWidget {
 
   InputDecoration _inputDecoration(String hint, IconData icon) {
     return InputDecoration(
-      hintText: hint, // <<--- Ini ganti ke hintText, BUKAN labelText
+      hintText: hint,
       prefixIcon: Icon(icon, color: Color(0xff0278be)),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),

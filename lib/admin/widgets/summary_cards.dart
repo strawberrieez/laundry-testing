@@ -62,24 +62,13 @@ class SummaryCards extends StatelessWidget {
             SummaryCard(
               title: "Pesanan Hari Ini",
               value: pesananHariIni.toString(),
-              percentage: "+12%", // placeholder
-              subtitle: "dari kemarin",
               icon: Icons.event_note,
               color: Colors.indigo,
             ),
-            SummaryCard(
-              title: "Dalam Proses",
-              value: dalamProses.toString(),
-              percentage: "-3%", // placeholder
-              subtitle: "dari kemarin",
-              icon: Icons.sync,
-              color: Colors.yellow,
-            ),
+            SummaryCard(title: "Dalam Proses", value: dalamProses.toString(), icon: Icons.sync, color: Colors.yellow),
             SummaryCard(
               title: "Pendapatan Hari Ini",
               value: "Rp ${NumberFormat("#,###", "id_ID").format(pendapatanHariIni)}",
-              percentage: "+8%", // placeholder
-              subtitle: "dari kemarin",
               icon: Icons.attach_money,
               color: Colors.green,
             ),
@@ -91,19 +80,11 @@ class SummaryCards extends StatelessWidget {
 }
 
 class SummaryCard extends StatelessWidget {
-  final String title, value, percentage, subtitle;
+  final String title, value;
   final IconData icon;
   final Color color;
 
-  const SummaryCard({
-    super.key,
-    required this.title,
-    required this.value,
-    required this.percentage,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-  });
+  const SummaryCard({super.key, required this.title, required this.value, required this.icon, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -114,17 +95,15 @@ class SummaryCard extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         child: FittedBox(
           fit: BoxFit.scaleDown,
-          alignment: Alignment.topLeft,
+          alignment: Alignment.center,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(icon, color: color, size: 28),
               const SizedBox(height: 6),
               Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
               Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 2),
-              Text("$percentage $subtitle", style: TextStyle(fontSize: 12, color: Colors.grey[600])),
             ],
           ),
         ),

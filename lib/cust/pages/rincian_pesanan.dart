@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:laundry_test/cust/pages/home_pages.dart';
 
@@ -48,63 +49,9 @@ class _RincianPesananState extends State<RincianPesanan> {
     }
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87));
-  }
-
-  Widget _buildDetailRow(String label, String value, {TextStyle? valueStyle}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(child: Text(label, style: const TextStyle(color: Colors.black54, fontSize: 14))),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: valueStyle ?? const TextStyle(color: Colors.black87, fontWeight: FontWeight.w500, fontSize: 14),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPaymentOption(String method) {
-    return RadioListTile<String>(
-      title: Text(method, style: const TextStyle(fontSize: 14)),
-      value: method,
-      groupValue: metodePembayaran,
-      onChanged: (value) {
-        setState(() {
-          metodePembayaran = value!;
-        });
-      },
-      contentPadding: EdgeInsets.zero,
-      dense: true,
-      visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      activeColor: const Color(0xFF0278BE),
-    );
-  }
-
-  Widget _buildCardSection({required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: child,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (isLoadingHarga) return const Center(child: CircularProgressIndicator());
+    if (isLoadingHarga) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     final data = widget.dataOrder;
     double beratPakaian = double.tryParse(data['berat']) ?? 0;
@@ -115,25 +62,23 @@ class _RincianPesananState extends State<RincianPesanan> {
     double total = subtotal + ongkir;
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
       body: Center(
         child: Dialog(
           backgroundColor: Colors.white.withOpacity(0.95),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), // fix jarak dari AppBar ke dialog
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
                   Text(
                     'Rincian Pesanan',
                     style: Theme.of(
@@ -141,8 +86,6 @@ class _RincianPesananState extends State<RincianPesanan> {
                     ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.black87),
                   ),
                   const SizedBox(height: 16),
-
-                  // Info Pelanggan
                   _buildCardSection(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,8 +99,6 @@ class _RincianPesananState extends State<RincianPesanan> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Detail Pesanan
                   _buildCardSection(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,8 +112,6 @@ class _RincianPesananState extends State<RincianPesanan> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Rincian Pembayaran
                   _buildCardSection(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,8 +139,6 @@ class _RincianPesananState extends State<RincianPesanan> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Metode Pembayaran
                   _buildCardSection(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,7 +150,6 @@ class _RincianPesananState extends State<RincianPesanan> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 24),
                   Row(
                     children: [
@@ -290,7 +226,9 @@ class _RincianPesananState extends State<RincianPesanan> {
     double total = subtotal + ongkir;
 
     final docId = await _generateCustomDocId();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
     await FirebaseFirestore.instance.collection('data_pemesanan').doc(docId).set({
+      'uid': uid,
       'nama': data['nama'],
       'alamat': data['alamat'],
       'no_hp': data['no_hp'],
@@ -303,5 +241,59 @@ class _RincianPesananState extends State<RincianPesanan> {
       'timestamp': FieldValue.serverTimestamp(),
     });
     return docId;
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87));
+  }
+
+  Widget _buildDetailRow(String label, String value, {TextStyle? valueStyle}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(child: Text(label, style: const TextStyle(color: Colors.black54, fontSize: 14))),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: valueStyle ?? const TextStyle(color: Colors.black87, fontWeight: FontWeight.w500, fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentOption(String method) {
+    return RadioListTile<String>(
+      title: Text(method, style: const TextStyle(fontSize: 14)),
+      value: method,
+      groupValue: metodePembayaran,
+      onChanged: (value) {
+        setState(() {
+          metodePembayaran = value!;
+        });
+      },
+      contentPadding: EdgeInsets.zero,
+      dense: true,
+      visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      activeColor: const Color(0xFF0278BE),
+    );
+  }
+
+  Widget _buildCardSection({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: child,
+    );
   }
 }
